@@ -1,0 +1,197 @@
+Assignment --> Voting App
+
+
+Executed Commands
+
+cd /root/
+git clone https://github.com/omrKalyan/example-voting-app
+cd example-voting-app/k8s-specifications/
+vi vote-service.yaml
+vi result-service.yaml
+kubectl apply -f .
+kubectl get all
+kubectl delete po vote-94849dc97-hp5sf
+kubectl get po
+kubectl delete po worker-dd46d7584-vrfkg
+kubectl get po
+kubectl delete po db-b54cd94f4-nqxxb
+kubectl get po
+kubectl describe po db-b54cd94f4-wpbq5
+kubectl get all
+kubectl logs result-5d57b59f4b-7tjcx
+kubectl logs db-b54cd94f4-bg29g
+kubectl logs worker-dd46d7584-k9pbb
+kubectl logs vote-94849dc97-xzw74
+kubectl get po
+kubectl delete po result-5d57b59f4b-7tjcx
+kubectl get po
+
+
+Assignment Steps and Snips
+
+1. go to root (cd /root/ ) . (both Master and Worker can perform this in their instances)
+2. git clone https://github.com/omrKalyan/example-voting-app
+3.  go to /root/example-voting-app/k8s-specifications
+4. [root@ip-172-31-7-102 k8s-specifications]# kubectl apply -f .
+•	All yaml files applied.
+
+5. for voting and result pods, Observe that NodePort is assigned.
+•	Yes, nodeport got assigned.
+
+6. take your publicIP (your instance IP) : NodePort ► open 2 browsers , one for VOTING and one for Results.
+•	http://18.141.25.90:32000/
+•	http://18.141.25.90:32001/
+
+
+7 try voting and see the results parallelly in results page.
+ 
+
+ 
+
+8. Now try to delete the Pods one by one (first voting Pod, then worker pod, then db pod) and see what happens to the voting and result app after deleting.
+•	While deleting VOTE POD, new instance came up and vote details remained same
+•	While deleting Worker POD, new instance came up and vote details remained same
+•	While deleting DB POD, Worker POD get restarted and existing vote details in DB was not available.
+
+
+ 
+
+9 Write your observations in a text file.
+
+•	While deleting VOTE POD, new instance came up and vote details remained same
+•	While deleting Worker POD, new instance came up and vote details remained same
+•	While deleting DB POD, Worker POD get restarted and also observed following error in Result POD and DB stats were not getting updated even new DB POD was running.
+
+
+10. what happens after db pod deletion. 
+
+Post deletion of DB POD, Worker POD get restarted and also observed following error in Result POD and DB stats were not getting updated even new DB POD was running.
+
+root@ip-172-31-31-186:~[root@ip-172-31-31-186 ~]# kubectl logs result-5d57b59f4b-7tjcx
+Wed, 27 Apr 2022 15:06:09 GMT body-parser deprecated bodyParser: use individual json/urlencoded middlewares at server.js:67:9
+Wed, 27 Apr 2022 15:06:09 GMT body-parser deprecated undefined extended: provide extended option at ../node_modules/body-parser/index.js:105:29
+App running on port 80
+Waiting for db
+Connected to db
+Error performing query: Error: This socket has been ended by the other party
+
+
+11. complete the assignment by making the result pod work. (if you delete db pod, results would not be captured.So repeat what we did in the class in order to make the result pod work.).
+
+Restarted Result POD and Stats/result populated as expected, but existing/earlier vote details were not available.
+
+ 
+
+ 
+
+12. Write in the text file, what you did in order to make the result pod work.
+
+Observed following error in Result POD logs and Result POD restarted again to have connection with DB POD again.
+
+root@ip-172-31-31-186:~[root@ip-172-31-31-186 ~]# kubectl logs result-5d57b59f4b-7tjcx
+Wed, 27 Apr 2022 15:06:09 GMT body-parser deprecated bodyParser: use individual json/urlencoded middlewares at server.js:67:9
+Wed, 27 Apr 2022 15:06:09 GMT body-parser deprecated undefined extended: provide extended option at ../node_modules/body-parser/index.js:105:29
+App running on port 80
+Waiting for db
+Connected to db
+Error performing query: Error: This socket has been ended by the other party
+
+
+
+###########################################################################################################################
+
+Assignment --> ReplicaSet
+
+
+
+
+
+Executed Commands
+
+cd /root/kubernetes-training/04-controllers/
+ls -lrth
+vi kubia-replicaset.yaml
+cat kubia-rc.yaml
+cat kubia-replicaset.yaml
+kubectl apply -f kubia-replicaset.yaml
+kubectl get po
+kubectl delete po kubia-rs-ng1-z5wcs
+kubectl get po
+kubectl scale rs kubia-rs-ng1 --replicas=4
+kubectl get po -0 wide
+curl 192.168.199.10:8080
+kubectl get po --show-labels
+kubectl label po kubia-rs-ng1-2bkgt app=mavenir --overwrite
+kubectl get po --show-labels
+
+
+Assignment Steps: REPLICA SET
+
+1. go to /root/kubernetes-training/04-controller
+2. vi kubia-replicaset.yaml
+3. Observe the differences between RC and this RS 
+•	No major difference observed in terms of functionality.
+•	But, parameter “matchLabels” introduced in ReplicaSet
+
+4. Run this file kubia-replicaset.yaml
+5. Delete one of the Pods and see the behaviour.
+•	Post deletion, new POD initiated.
+
+6. Scale the RS to 4 (in YAML file it is 3)
+•	Post scaling, one more POD initiated.
+
+7. curl one of the pods (curl ip:8080) and check if it responds.
+•	Yes, POD responded well.
+
+[root@ip-172-31-31-186 04-controllers]# curl 192.168.199.10:8080
+You've hit kubia-rs-ng1-48k5k
+
+
+8. Change the label of one of the pods to mavenir (from kubia) and observe the changes.
+
+•	 Post changing label, one more POD initiated/created to meet the replica set functionality as per configurations.
+  
+[root@ip-172-31-31-186 04-controllers]# kubectl get po --show-labels
+NAME                READY   STATUS    RESTARTS   AGE     LABELS
+kubia-rs-ng1-2bkgt   1/1     Running   0          12m     app=mavenir
+kubia-rs-ng1-48k5k   1/1     Running   0          11m     app=kubia
+kubia-rs-ng1-4xdr2   1/1     Running   0          7m51s   app=kubia
+kubia-rs-ng1-cdhp2   1/1     Running   0          12m     app=kubia
+kubia-rs-ng1-jtgd7   1/1     Running   0          10m     app=kubia
+
+
+
+
+################################################################################################
+
+3. your comment on WHY result app STOPPED working after db pod stop
+NG  Post deletion of DB pod, result POD lost connection with DB and getting below highlighted error. Post deleting the result POD, new POD got initiated which established the connection with DB again and started populating stats on Result GUI.
+
+root@ip-172-31-31-186:~[root@ip-172-31-31-186 ~]# kubectl logs result-5d57b59f4b-7tjcx
+Wed, 27 Apr 2022 15:06:09 GMT body-parser deprecated bodyParser: use individual json/urlencoded middlewares at server.js:67:9
+Wed, 27 Apr 2022 15:06:09 GMT body-parser deprecated undefined extended: provide extended option at ../node_modules/body-parser/index.js:105:29
+App running on port 80
+Waiting for db
+Connected to db
+Error performing query: Error: This socket has been ended by the other party
+
+
+4. your answer to HOW YOU MADE THE RESULT POD work.
+NG  Post deletion of DB POD, Result POD lost connection with DB and Once DB POD came UP, restarted Result POD to establish the connection again with DB and APP started working as expected.
+
+5. Some jargons (just names are enough- dont need sentences) that you learnt from the 40-hour Training session
+NG  Now, I’ve Basic understanding w.r.t following mentioned concepts.
+•	Docker Configurations
+•	Images
+•	Container 
+•	Microservices
+•	PODs
+•	Replication Controller
+•	Replica Set
+•	Deployment
+•	Jobs
+•	Services
+•	CNI
+•	Volume
+•	PV, PVC
+•	Calico and HELM
